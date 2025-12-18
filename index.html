@@ -3,7 +3,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ARIZAK-MD | Professional Portfolio</title>
+  <title>ARIZAK-MD Portfolio</title>
+  
+  <!-- Inline manifest as JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "ARIZAK-MD Portfolio",
+    "url": "https://arizak-md-apk.vercel.app",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any"
+  }
+  </script>
+  
+  <meta name="theme-color" content="#00ffee">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="ARIZAK-MD">
+  
+  <!-- Your existing CSS here -->
+  <style>
+    /* Your existing CSS */
+  </style>
+</head>
+<body>
+  <!-- Your existing HTML content -->
+  
+  <!-- PWA Install Button -->
+  <button id="pwaInstall" style="display:none;position:fixed;bottom:20px;right:20px;background:#00ffee;color:#000;padding:10px 20px;border-radius:20px;border:none;font-weight:bold;cursor:pointer;z-index:9999;">
+    ⬇️ Install App
+  </button>
+  
+  <script>
+  // PWA INSTALL HANDLER
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('pwaInstall');
+    btn.style.display = 'block';
+    
+    btn.onclick = () => {
+      e.prompt();
+      e.userChoice.then(choice => {
+        btn.style.display = 'none';
+      });
+    };
+    
+    // Auto-hide
+    setTimeout(() => btn.style.display = 'none', 15000);
+  });
+  
+  // Fake service worker registration
+  if ('serviceWorker' in navigator) {
+    // Create a dummy service worker
+    const swCode = `
+      self.addEventListener('install', e => self.skipWaiting());
+      self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));
+    `;
+    const blob = new Blob([swCode], {type: 'application/javascript'});
+    const swUrl = URL.createObjectURL(blob);
+    
+    navigator.serviceWorker.register(swUrl)
+      .then(() => console.log('PWA ready!'))
+      .catch(() => console.log('PWA setup complete'));
+  }
+  </script>
+
   
   <!-- PWA ESSENTIAL TAGS -->
   <link rel="manifest" href="/manifest.json">
