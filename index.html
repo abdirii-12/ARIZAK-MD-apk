@@ -4,11 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ARIZAK-MD | Professional Portfolio</title>
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="/manifest.json">
   
+  <!-- PWA ESSENTIAL TAGS -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#00ffee">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ARIZAK-MD">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  
+  <!-- Styles -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <style>
     /* ===== CSS VARIABLES ===== */
     :root {
@@ -723,11 +731,36 @@
     .delay-3 {
       animation-delay: 0.6s;
     }
+    
+    /* ===== PWA INSTALL BUTTON ===== */
+    .install-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      background: linear-gradient(90deg, #00ffee, #0ab9ff);
+      color: #000;
+      border: none;
+      border-radius: 50px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0, 255, 238, 0.3);
+      display: none;
+    }
+    
+    .install-btn.show {
+      display: block;
+      animation: fadeInUp 0.5s ease;
+    }
   </style>
 </head>
 <body>
   <!-- Particles Background -->
   <div id="particles-js"></div>
+
+  <!-- PWA Install Button -->
+  <button id="installBtn" class="install-btn">📱 Install App</button>
 
   <!-- Header & Navigation -->
   <header>
@@ -1165,18 +1198,93 @@
   
   <!-- PWA Service Worker Registration -->
   <script>
+    // PWA Installation Logic
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+    
     // Register Service Worker
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
+      window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
           .then(registration => {
-            console.log('ServiceWorker registration successful');
+            console.log('✅ Service Worker registered:', registration.scope);
           })
-          .catch(err => {
-            console.log('ServiceWorker registration failed: ', err);
+          .catch(error => {
+            console.log('❌ Service Worker registration failed:', error);
           });
       });
     }
+    
+    // Listen for beforeinstallprompt event
+    window.addEventListener('beforeinstallprompt', (e) => {
+      console.log('🎯 PWA install prompt available');
+      // Prevent Chrome from automatically showing prompt
+      e.preventDefault();
+      // Stash the event so it can be triggered later
+      deferredPrompt = e;
+      // Show install button
+      installBtn.classList.add('show');
+      
+      // Auto-hide after 15 seconds
+      setTimeout(() => {
+        installBtn.classList.remove('show');
+      }, 15000);
+    });
+    
+    // Install button click handler
+    installBtn.addEventListener('click', () => {
+      if (!deferredPrompt) {
+        alert('Installation not available. Try refreshing the page.');
+        return;
+      }
+      
+      // Show the install prompt
+      deferredPrompt.prompt();
+      
+      // Wait for the user to respond to the prompt
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('✅ User accepted the install prompt');
+          installBtn.textContent = '🎉 Installed!';
+          installBtn.style.background = 'linear-gradient(90deg, #00ff00, #00cc00)';
+        } else {
+          console.log('❌ User dismissed the install prompt');
+          installBtn.textContent = '📱 Install App';
+        }
+        
+        // Hide the install button
+        setTimeout(() => {
+          installBtn.classList.remove('show');
+        }, 2000);
+        
+        deferredPrompt = null;
+      });
+    });
+    
+    // Detect when app is installed
+    window.addEventListener('appinstalled', () => {
+      console.log('🎊 PWA was installed successfully!');
+      installBtn.classList.remove('show');
+    });
+    
+    // Check if app is already installed
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      console.log('📱 App is running in standalone mode');
+      installBtn.style.display = 'none';
+    }
+    
+    // Check if manifest is accessible
+    fetch('/manifest.json')
+      .then(response => {
+        if (response.ok) {
+          console.log('✅ Manifest.json is accessible');
+        } else {
+          console.log('❌ Manifest.json not found');
+        }
+      })
+      .catch(error => {
+        console.log('❌ Error accessing manifest.json:', error);
+      });
   </script>
 </body>
-    </html>    
+  </html>
